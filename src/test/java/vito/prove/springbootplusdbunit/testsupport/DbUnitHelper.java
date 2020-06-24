@@ -1,162 +1,118 @@
 package vito.prove.springbootplusdbunit.testsupport;
 
-import java.io.File;
-import java.util.Iterator;
 import java.util.stream.Stream;
 
-import javax.sql.DataSource;
+import org.dbunit.PrepAndExpectedTestCase;
+import org.dbunit.PrepAndExpectedTestCaseSteps;
+import org.dbunit.VerifyTableDefinition;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import org.dbunit.Assertion;
-import org.dbunit.DataSourceDatabaseTester;
-import org.dbunit.database.DatabaseConfig;
-import org.dbunit.database.IDatabaseConnection;
-import org.dbunit.dataset.CompositeDataSet;
-import org.dbunit.dataset.DataSetException;
-import org.dbunit.dataset.IDataSet;
-import org.dbunit.dataset.ITable;
-import org.dbunit.dataset.csv.CsvDataSet;
-import org.dbunit.operation.DatabaseOperation;
-
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-public interface DbUnitHelper {
-    DataSource getDataSource();
+public abstract class DbUnitHelper {
+    @Autowired
+    PrepAndExpectedTestCase dbUnit;
 
-    String PREP = "prep";
-    String EXPECTED = "expected";
-
-    default void prepare() throws Throwable {
-        val ds = ds(this.getClass(), testName(), PREP);
-
-        val c = this.getConnection();
-        try {
-            DatabaseOperation.CLEAN_INSERT.execute(c, ds);
-        }
-        finally {
-            c.close();
-        }
-    }
-
-    default ACIter<Table> validate() throws Throwable {
-        val ds = ds(this.getClass(), testName(), EXPECTED);
-
-        val c = this.getConnection();
-
-        return new ACIter<>(c, Stream.of(ds.getTableNames()).map(tn -> {
-            return new Table(getTable(ds, tn), createTable(c, tn));
-        })::iterator);
-    }
-
-    default void assertTableEquals(final Table table) throws Throwable {
-        Assertion.assertEquals(table.expected, table.actual);
-    }
-
-    default void clean() throws Throwable {
-        val tn = testName();
-        val ds = new CompositeDataSet(ds(this.getClass(), tn, PREP),
-                                      ds(this.getClass(), tn, EXPECTED));
-
-        val c = this.getConnection();
-        try {
-            DatabaseOperation.TRUNCATE_TABLE.execute(c, ds);
-        }
-        finally {
-            c.close();
-        }
-    }
-
-    default void dbtest(final A a) throws Throwable {
-        try {
-            this.prepare();
-            a.action();
-            try (val tables = this.validate()) {
-                for (val table : tables)
-                    this.assertTableEquals(table);
-            }
-        }
-        finally {
-            this.clean();
-        }
-    }
-
-    default IDatabaseConnection getConnection() throws Exception {
+    public <T> T runTest(final S<T> supplier,
+                         final String... tables) throws Throwable {
+        @SuppressWarnings("unchecked")
         val ret =
-                new DataSourceDatabaseTester(this.getDataSource()).getConnection();
-        ret.getConfig()
-           .setProperty(DatabaseConfig.FEATURE_ALLOW_EMPTY_FIELDS, true);
+                (T) this.dbUnit.runTest(Stream.of(tables)
+                                              .map(this::vtd)
+                                              .toArray(VerifyTableDefinition[]::new),
+                                        Stream.of(tables)
+                                              .map(this::prepTable)
+                                              .toArray(String[]::new),
+                                        Stream.of(tables)
+                                              .map(this::expectedTable)
+                                              .toArray(String[]::new),
+                                        this.wraps(supplier));
         return ret;
     }
 
-    static String testName() {
-        for (val ste : Thread.currentThread().getStackTrace())
-            if (!ste.getClassName().equals(Thread.class.getName()) &&
-                !ste.getClassName().equals(DbUnitHelper.class.getName()))
-                return ste.getMethodName();
-        throw new StackOverflowError();
-        // return Thread.currentThread().getStackTrace()[4].getMethodName();
-    }
-
-    private static <T extends DbUnitHelper>
-            IDataSet
-            ds(final Class<T> cls,
-               final String testName,
-               final String stem) throws DataSetException {
-        val uri = String.format("%s/%s/%s",
-                                cls.getCanonicalName().replace('.', '/'),
-                                testName,
-                                stem);
-        val f = new File(cls.getClassLoader().getResource(uri).getPath());
-        return new CsvDataSet(f);
-    }
-
-    private static ITable getTable(final IDataSet ds, final String tableName) {
-        return wrap(() -> ds.getTable(tableName));
-    }
-
-    private static ITable createTable(final IDatabaseConnection dc,
-                                      final String tableName) {
-        return wrap(() -> dc.createTable(tableName));
+    public <T> T runTest(final A action,
+                         final String... tables) throws Throwable {
+        @SuppressWarnings("unchecked")
+        val ret =
+                (T) this.dbUnit.runTest(Stream.of(tables)
+                                              .map(this::vtd)
+                                              .toArray(VerifyTableDefinition[]::new),
+                                        Stream.of(tables)
+                                              .map(this::prepTable)
+                                              .toArray(String[]::new),
+                                        Stream.of(tables)
+                                              .map(this::expectedTable)
+                                              .toArray(String[]::new),
+                                        this.wraps(action));
+        return ret;
     }
 
     @FunctionalInterface
-    static interface S<T> {
+    public static interface S<T> {
         T get() throws Throwable;
     }
 
     @FunctionalInterface
-    static interface A {
-        void action() throws Throwable;
+    public static interface A {
+        void doit() throws Throwable;
     }
 
-    private static <T> T wrap(final S<T> s) throws RuntimeException {
-        try {
-            return s.get();
-        }
-        catch (final Throwable e) {
-            throw new RuntimeException(e);
-        }
+    <T>
+     PrepAndExpectedTestCaseSteps
+     wraps(final S<T> s) throws RuntimeException {
+        return () -> {
+            try {
+                return s.get();
+            }
+            catch (final Exception e) {
+                throw e;
+            }
+            catch (final Throwable e) {
+                throw new RuntimeException(e);
+            }
+        };
     }
 
-    @RequiredArgsConstructor
-    static class Table {
-        public final ITable expected;
-        public final ITable actual;
+    PrepAndExpectedTestCaseSteps wraps(final A a) throws RuntimeException {
+        return () -> {
+            try {
+                a.doit();
+                return null;
+            }
+            catch (final Exception e) {
+                throw e;
+            }
+            catch (final Throwable e) {
+                throw new RuntimeException(e);
+            }
+        };
     }
 
-    @RequiredArgsConstructor
-    static class ACIter<T> implements AutoCloseable, Iterable<T> {
-        final IDatabaseConnection conn;
-        final Iterable<T> iter;
+    VerifyTableDefinition vtd(final String table) {
+        return new VerifyTableDefinition(table, null);
+    }
 
-        @Override
-        public Iterator<T> iterator() {
-            return this.iter.iterator();
-        }
+    String prepTable(final String table) {
+        return this.testName("prep", table);
+    }
 
-        @Override
-        public void close() throws Exception {
-            this.conn.close();
+    String expectedTable(final String table) {
+        return this.testName("expected", table);
+    }
+
+    String testName(final String stem, final String table) {
+        for (val ste : Thread.currentThread().getStackTrace()) {
+            val cls = ste.getClassName();
+            if (!cls.equals(Thread.class.getName()) &&
+                !cls.equals(DbUnitHelper.class.getName()) &&
+                !cls.contains("$") &&
+                !cls.startsWith(Stream.class.getPackageName()))
+                return String.format("/%s/%s/%s/%s.csv",
+                                     cls.replace('.', '/'),
+                                     ste.getMethodName(),
+                                     stem,
+                                     table);
         }
+        throw new StackOverflowError();
     }
 }

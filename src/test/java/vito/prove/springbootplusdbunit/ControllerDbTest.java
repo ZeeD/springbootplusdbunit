@@ -7,7 +7,6 @@ import javax.sql.DataSource;
 import org.dbunit.DataSourceDatabaseTester;
 import org.dbunit.DefaultPrepAndExpectedTestCase;
 import org.dbunit.PrepAndExpectedTestCase;
-import org.dbunit.VerifyTableDefinition;
 import org.dbunit.operation.DatabaseOperation;
 import org.dbunit.util.fileloader.CsvDataFileLoader;
 import org.junit.jupiter.api.Assertions;
@@ -20,32 +19,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 
 import lombok.val;
+import vito.prove.springbootplusdbunit.testsupport.DbUnitHelper;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
-public class ControllerDbTest {
+public class ControllerDbTest extends DbUnitHelper {
     @Autowired
     MyRestController controller;
-    @Autowired
-    PrepAndExpectedTestCase dbUnit;
 
     @Test
     void myTest() throws Throwable {
-        this.dbUnit.runTest(new VerifyTableDefinition[] { new VerifyTableDefinition("MY_TABLE",
-                                                                                    null) },
-                            new String[] { "/vito/prove/springbootplusdbunit/ControllerDbTest/myTest/prep/MY_TABLE.csv" },
-                            new String[] { "/vito/prove/springbootplusdbunit/ControllerDbTest/myTest/expected/MY_TABLE.csv" },
-                            () -> {
-                                try {
-                                    this.controller.modify(new MyTable(null,
-                                                                       "name1",
-                                                                       new Date(100_000L)));
-                                }
-                                catch (final Throwable t) {
-                                    throw new Exception(t);
-                                }
-                                return null;
-                            });
+        this.runTest(() -> this.controller.modify(new MyTable(null,
+                                                              "name1",
+                                                              new Date(100_000L))),
+                     "MY_TABLE");
     }
 
     @Test
