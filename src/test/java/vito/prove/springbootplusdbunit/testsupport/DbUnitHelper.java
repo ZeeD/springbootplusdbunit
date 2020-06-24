@@ -1,5 +1,7 @@
 package vito.prove.springbootplusdbunit.testsupport;
 
+import static java.util.stream.Stream.of;
+
 import java.util.stream.Stream;
 
 import org.dbunit.PrepAndExpectedTestCase;
@@ -13,38 +15,27 @@ public abstract class DbUnitHelper {
     @Autowired
     PrepAndExpectedTestCase dbUnit;
 
+    @SuppressWarnings("unchecked")
     public <T> T runTest(final S<T> supplier,
                          final String... tables) throws Throwable {
-        @SuppressWarnings("unchecked")
-        val ret =
-                (T) this.dbUnit.runTest(Stream.of(tables)
-                                              .map(this::vtd)
-                                              .toArray(VerifyTableDefinition[]::new),
-                                        Stream.of(tables)
-                                              .map(this::prepTable)
-                                              .toArray(String[]::new),
-                                        Stream.of(tables)
-                                              .map(this::expectedTable)
-                                              .toArray(String[]::new),
-                                        this.wraps(supplier));
-        return ret;
+        return (T) this.dbUnit.runTest(of(tables).map(this::vtd)
+                                                 .toArray(VerifyTableDefinition[]::new),
+                                       of(tables).map(this::prepTable)
+                                                 .toArray(String[]::new),
+                                       of(tables).map(this::expectedTable)
+                                                 .toArray(String[]::new),
+                                       this.wraps(supplier));
     }
 
-    public <T> T runTest(final A action,
-                         final String... tables) throws Throwable {
-        @SuppressWarnings("unchecked")
-        val ret =
-                (T) this.dbUnit.runTest(Stream.of(tables)
-                                              .map(this::vtd)
-                                              .toArray(VerifyTableDefinition[]::new),
-                                        Stream.of(tables)
-                                              .map(this::prepTable)
-                                              .toArray(String[]::new),
-                                        Stream.of(tables)
-                                              .map(this::expectedTable)
-                                              .toArray(String[]::new),
-                                        this.wraps(action));
-        return ret;
+    public void runTest(final A action,
+                        final String... tables) throws Throwable {
+        this.dbUnit.runTest(of(tables).map(this::vtd)
+                                      .toArray(VerifyTableDefinition[]::new),
+                            of(tables).map(this::prepTable)
+                                      .toArray(String[]::new),
+                            of(tables).map(this::expectedTable)
+                                      .toArray(String[]::new),
+                            this.wraps(action));
     }
 
     @FunctionalInterface
@@ -57,9 +48,7 @@ public abstract class DbUnitHelper {
         void doit() throws Throwable;
     }
 
-    <T>
-     PrepAndExpectedTestCaseSteps
-     wraps(final S<T> s) throws RuntimeException {
+    PrepAndExpectedTestCaseSteps wraps(final S<?> s) throws RuntimeException {
         return () -> {
             try {
                 return s.get();
