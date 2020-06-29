@@ -1,5 +1,7 @@
 package vito.prove.springbootplusdbunit;
 
+import static org.dbunit.database.DatabaseConfig.PROPERTY_DATATYPE_FACTORY;
+
 import java.util.Date;
 
 import javax.sql.DataSource;
@@ -7,6 +9,8 @@ import javax.sql.DataSource;
 import org.dbunit.DataSourceDatabaseTester;
 import org.dbunit.DefaultPrepAndExpectedTestCase;
 import org.dbunit.PrepAndExpectedTestCase;
+import org.dbunit.dataset.datatype.IDataTypeFactory;
+import org.dbunit.ext.h2.H2DataTypeFactory;
 import org.dbunit.operation.DatabaseOperation;
 import org.dbunit.util.fileloader.CsvDataFileLoader;
 import org.junit.jupiter.api.Assertions;
@@ -46,12 +50,20 @@ public class ControllerDbTest extends DbUnitHelper {
         DataSource ds;
 
         @Bean
-        PrepAndExpectedTestCase prepAndExpectedTestCase() {
+        PrepAndExpectedTestCase prepAndExpectedTestCase() throws Exception {
             val dt =
                    new DataSourceDatabaseTester(new TransactionAwareDataSourceProxy(this.ds));
+            dt.getConnection()
+              .getConfig()
+              .setProperty(PROPERTY_DATATYPE_FACTORY, new H2DataTypeFactory());
             dt.setTearDownOperation(DatabaseOperation.DELETE_ALL);
             return new DefaultPrepAndExpectedTestCase(new CsvDataFileLoader(),
                                                       dt);
+        }
+
+        @Bean
+        IDataTypeFactory dataTypeFactory() {
+            return new H2DataTypeFactory();
         }
     }
 }
