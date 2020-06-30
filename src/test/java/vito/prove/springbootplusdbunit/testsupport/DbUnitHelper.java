@@ -1,7 +1,9 @@
 package vito.prove.springbootplusdbunit.testsupport;
 
+import static java.lang.String.format;
 import static java.lang.Thread.currentThread;
-import static java.util.stream.Stream.of;
+import static java.nio.file.Files.readAllLines;
+import static java.nio.file.Path.of;
 import static org.dbunit.database.DatabaseConfig.FEATURE_BATCHED_STATEMENTS;
 import static org.dbunit.database.DatabaseConfig.PROPERTY_DATATYPE_FACTORY;
 
@@ -35,26 +37,47 @@ public abstract class DbUnitHelper {
         ((Logger) LoggerFactory.getLogger("org.dbunit")).setLevel(Level.ALL);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> T runTest(final S<T> supplier,
-                         final String... tables) throws Throwable {
-        return (T) this.dbUnit.runTest(of(tables).map(this::vtd)
-                                                 .toArray(VerifyTableDefinition[]::new),
-                                       of(tables).map(this::prepTable)
-                                                 .toArray(String[]::new),
-                                       of(tables).map(this::expectedTable)
-                                                 .toArray(String[]::new),
-                                       this.wraps(supplier));
-    }
+    // @SuppressWarnings("unchecked")
+    // public <T> T runTest(final S<T> supplier,
+    // final String... tables) throws Throwable {
+    // return (T) this.dbUnit.runTest(of(tables).map(this::vtd)
+    // .toArray(VerifyTableDefinition[]::new),
+    // of(tables).map(this::prepTable)
+    // .toArray(String[]::new),
+    // of(tables).map(this::expectedTable)
+    // .toArray(String[]::new),
+    // this.wraps(supplier));
+    // }
 
-    public void runTest(final A action,
-                        final String... tables) throws Throwable {
-        this.dbUnit.runTest(of(tables).map(this::vtd)
-                                      .toArray(VerifyTableDefinition[]::new),
-                            of(tables).map(this::prepTable)
-                                      .toArray(String[]::new),
-                            of(tables).map(this::expectedTable)
-                                      .toArray(String[]::new),
+    /**
+     * really ugly workaround: CsvURLDataSet WANT a single .csv file, but loads
+     * ALL THE DIRECTORY CONTENT! the trick is to keep the expected tables from
+     * table-ordering.txt (witch MUST be set), and pass to runTest a single
+     * "random" csv for the preps and the expected
+     */
+    public void runTest(final A action) throws Throwable {
+        val et = this.expectedTable();
+        val etTables =
+                     readAllLines(of(this.getClass()
+                                         .getResource(format("%s/table-ordering.txt",
+                                                             et))
+                                         .toURI()));
+        val etTable = format("%s/%s.csv", et, etTables.get(0));
+
+        val pt = this.prepTable();
+        val ptTable =
+                    format("%s/%s.csv",
+                           pt,
+                           readAllLines(of(this.getClass()
+                                               .getResource(format("%s/table-ordering.txt",
+                                                                   pt))
+                                               .toURI())).get(0));
+
+        this.dbUnit.runTest(etTables.stream()
+                                    .map(this::vtd)
+                                    .toArray(VerifyTableDefinition[]::new),
+                            new String[] { ptTable },
+                            new String[] { etTable },
                             this.wraps(action));
     }
 
@@ -101,26 +124,25 @@ public abstract class DbUnitHelper {
         return new VerifyTableDefinition(table, null);
     }
 
-    String prepTable(final String table) {
-        return this.testName("prep", table);
+    String prepTable() {
+        return this.testName("prep");
     }
 
-    String expectedTable(final String table) {
-        return this.testName("expected", table);
+    String expectedTable() {
+        return this.testName("expected");
     }
 
-    String testName(final String stem, final String table) {
+    String testName(final String stem) {
         for (val ste : currentThread().getStackTrace()) {
             val cls = ste.getClassName();
             if (!cls.equals(Thread.class.getName()) &&
                 !cls.equals(DbUnitHelper.class.getName()) &&
                 !cls.contains("$") &&
                 !cls.startsWith(Stream.class.getPackageName()))
-                return String.format("/%s/%s/%s/%s.csv",
+                return String.format("/%s/%s/%s",
                                      cls.replace('.', '/'),
                                      ste.getMethodName(),
-                                     stem,
-                                     table);
+                                     stem);
         }
         throw new StackOverflowError();
     }

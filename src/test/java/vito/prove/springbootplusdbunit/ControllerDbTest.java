@@ -25,9 +25,7 @@ public class ControllerDbTest extends DbUnitHelper {
     void myTest() throws Throwable {
         this.runTest(() -> this.controller.modify(new MyTable(null,
                                                               "name1",
-                                                              new Date(100_000L))),
-                     "MY_TABLE",
-                     "MY_OTHER_TABLE");
+                                                              new Date(100_000L))));
     }
 
     @Test
