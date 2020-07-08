@@ -10,11 +10,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import vito.prove.springbootplusdbunit.entity.MyOtherTable;
+import vito.prove.springbootplusdbunit.entity.MyTable;
+import vito.prove.springbootplusdbunit.repository.MyOtherTableRepository;
+import vito.prove.springbootplusdbunit.repository.MyTableRepository;
 
 @RequiredArgsConstructor
 @RestController
 class MyRestController {
-    final MyTableRepository repository;
+    final MyTableRepository myTableRepository;
+    final MyOtherTableRepository myOtherTableRepository;
 
     @GetMapping(value = "init")
     public void init() {
@@ -22,28 +27,25 @@ class MyRestController {
                            new MyTable(null, "name2", new Date(1_000L)),
                            new MyTable(null, "name3", new Date(100_000L)));
 
-        this.repository.saveAll(rows);
+        this.myTableRepository.saveAll(rows);
     }
 
-    @GetMapping(value = "findAll")
+    @GetMapping(value = "find-all")
     public Iterable<MyTable> findAll() {
-        return this.repository.findAll();
+        return this.myTableRepository.findAll();
     }
 
-    @PostMapping(value = "modify")
-    public void modify(@RequestBody
-    final MyTable myTable) throws Throwable {
-        if (myTable.id == null) {
-            val foundTables = this.repository.findByName(myTable.name);
-            if (foundTables.isEmpty())
-                this.repository.save(myTable);
-            else {
-                for (val foundTable : foundTables)
-                    foundTable.when = myTable.when;
-                this.repository.saveAll(foundTables);
-            }
+    @PostMapping(value = "update-or-copy")
+    public void
+           updateOrCopy(@RequestBody final MyTable myTable) throws Throwable {
+        if (myTable.id != null) // update
+            this.myTableRepository.save(myTable);
+        else { // save and copy
+            val myTableId = this.myTableRepository.save(myTable).id;
+            val myOtherTable = new MyOtherTable(myTableId,
+                                                myTable.name,
+                                                myTable.when);
+            this.myOtherTableRepository.save(myOtherTable);
         }
-        else
-            this.repository.save(myTable);
     }
 }

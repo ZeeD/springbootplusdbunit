@@ -1,4 +1,4 @@
-package vito.prove.springbootplusdbunit;
+package vito.prove.springbootplusdbunit.entity;
 
 import static javax.persistence.GenerationType.SEQUENCE;
 
@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-public class MyTable {
+public class MyOtherTable {
     @Id
-    @GeneratedValue(strategy = SEQUENCE, generator = "my_table_seq")
-    @SequenceGenerator(name = "my_table_seq",
-                       sequenceName = "my_table_seq",
+    @GeneratedValue(strategy = SEQUENCE, generator = "my_other_table_seq")
+    @SequenceGenerator(name = "my_other_table_seq",
+                       sequenceName = "my_other_table_seq",
                        allocationSize = 1)
     public Long id;
     public String name;
