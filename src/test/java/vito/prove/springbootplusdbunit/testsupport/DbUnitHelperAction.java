@@ -7,7 +7,7 @@ public interface DbUnitHelperAction extends DbUnitHelperBase {
      * run the tests, do the db checks, do not use any return value
      */
     default void runTest(final Action action) throws Throwable {
-        this.runTest(this.wraps(action));
+        this.runTestSteps(this.wraps(action));
     }
 
     @FunctionalInterface

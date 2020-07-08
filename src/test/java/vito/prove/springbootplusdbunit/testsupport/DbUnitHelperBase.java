@@ -37,7 +37,7 @@ public interface DbUnitHelperBase {
      * "random" csv for the preps and the expected
      */
     default Object
-            runTest(final PrepAndExpectedTestCaseSteps testSteps) throws Throwable {
+            runTestSteps(final PrepAndExpectedTestCaseSteps testSteps) throws Throwable {
         val cls = this.getClass();
         val fmt = "%s/table-ordering.txt";
 

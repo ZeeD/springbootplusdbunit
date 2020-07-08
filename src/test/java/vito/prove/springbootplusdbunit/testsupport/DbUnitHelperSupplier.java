@@ -8,7 +8,7 @@ public interface DbUnitHelperSupplier extends DbUnitHelperBase {
      */
     @SuppressWarnings("unchecked")
     default <T> T runTest(final S<T> supplier) throws Throwable {
-        return (T) this.runTest(this.wraps(supplier));
+        return (T) this.runTestSteps(this.wraps(supplier));
     }
 
     @FunctionalInterface
