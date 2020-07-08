@@ -15,7 +15,6 @@ import org.dbunit.DataSourceDatabaseTester;
 import org.dbunit.DefaultPrepAndExpectedTestCase;
 import org.dbunit.IDatabaseTester;
 import org.dbunit.PrepAndExpectedTestCase;
-import org.dbunit.PrepAndExpectedTestCaseSteps;
 import org.dbunit.VerifyTableDefinition;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.ext.h2.H2DataTypeFactory;
@@ -31,13 +30,16 @@ public interface DbUnitHelperBase {
     PrepAndExpectedTestCase getDbUnit();
 
     /**
-     * really ugly workaround: CsvURLDataSet WANT a single .csv file, but loads
-     * ALL THE DIRECTORY CONTENT! the trick is to keep the expected tables from
-     * table-ordering.txt (witch MUST be set), and pass to runTest a single
-     * "random" csv for the preps and the expected
+     * run the tests, do the db checks, return the supplier value
      */
-    default Object
-            runTestSteps(final PrepAndExpectedTestCaseSteps testSteps) throws Throwable {
+    @SuppressWarnings("unchecked")
+    default <T> T runTest(final Supplier<T> supplier) throws Throwable {
+        /*
+         * really ugly workaround: CsvURLDataSet WANT a single .csv file, but
+         * loads ALL THE DIRECTORY CONTENT! the trick is to keep the expected
+         * tables from table-ordering.txt (witch MUST be set), and pass to
+         * runTest a single "random" csv for the preps and the expected
+         */
         val cls = this.getClass();
         val fmt = "%s/table-ordering.txt";
 
@@ -49,13 +51,24 @@ public interface DbUnitHelperBase {
         val pTables = readAllLines(of(cls.getResource(format(fmt, p)).toURI()));
         val pTable = format("%s/%s.csv", p, pTables.get(0));
 
-        return this.getDbUnit()
-                   .runTest(eTables.stream()
-                                   .map(t -> new VerifyTableDefinition(t, null))
-                                   .toArray(VerifyTableDefinition[]::new),
-                            new String[] { pTable },
-                            new String[] { eTable },
-                            testSteps);
+        return (T) this.getDbUnit()
+                       .runTest(eTables.stream()
+                                       .map(t -> new VerifyTableDefinition(t,
+                                                                           null))
+                                       .toArray(VerifyTableDefinition[]::new),
+                                new String[] { pTable },
+                                new String[] { eTable },
+                                () -> {
+                                    try {
+                                        return supplier.get();
+                                    }
+                                    catch (final Exception ex) {
+                                        throw ex;
+                                    }
+                                    catch (final Throwable ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                });
     }
 
     default String testName(final String stem) {
@@ -63,8 +76,6 @@ public interface DbUnitHelperBase {
             val cls = ste.getClassName();
             if (cls.equals(Thread.class.getName()) ||
                 cls.equals(DbUnitHelperBase.class.getName()) ||
-                cls.equals(DbUnitHelperAction.class.getName()) ||
-                cls.equals(DbUnitHelperSupplier.class.getName()) ||
                 cls.contains("$") ||
                 cls.startsWith(Stream.class.getPackageName()))
                 continue;
@@ -76,8 +87,8 @@ public interface DbUnitHelperBase {
         throw new StackOverflowError();
     }
 
-    public static class H2PrepAndExpectedTestCase extends
-                                                  DefaultPrepAndExpectedTestCase {
+    static class H2PrepAndExpectedTestCase extends
+                                           DefaultPrepAndExpectedTestCase {
         public H2PrepAndExpectedTestCase(final DataSource ds) {
             super(new CsvDataFileLoader(), dt(ds));
         }
@@ -95,5 +106,10 @@ public interface DbUnitHelperBase {
             config.setProperty(PROPERTY_DATATYPE_FACTORY,
                                new H2DataTypeFactory());
         }
+    }
+
+    @FunctionalInterface
+    static interface Supplier<T> {
+        T get() throws Throwable;
     }
 }

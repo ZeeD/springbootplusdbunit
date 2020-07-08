@@ -44,7 +44,10 @@ public class ControllerDbTest extends DbUnitHelper {
                                   "newName",
                                   from(parse("2020-11-05T05:58:13Z")));
 
-        this.runTest(() -> this.controller.updateOrCopy(myTable));
+        this.runTest(() -> {
+            this.controller.updateOrCopy(myTable);
+            return null;
+        });
     }
 
     @Test
@@ -60,7 +63,10 @@ public class ControllerDbTest extends DbUnitHelper {
                                   "name",
                                   from(parse("1982-11-05T05:58:13Z")));
 
-        this.runTest(() -> this.controller.updateOrCopy(myTable));
+        this.runTest(() -> {
+            this.controller.updateOrCopy(myTable);
+            return null;
+        });
     }
 
     @Test
