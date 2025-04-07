@@ -1,13 +1,13 @@
 package vito.prove.springbootplusdbunit.entity;
 
-import static javax.persistence.GenerationType.SEQUENCE;
+import static jakarta.persistence.GenerationType.SEQUENCE;
 
 import java.util.Date;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -17,11 +17,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class IDontCareAboutThisTable {
     @Id
-    @GeneratedValue(strategy = SEQUENCE,
-                    generator = "i_dont_care_about_this_table_seq")
-    @SequenceGenerator(name = "i_dont_care_about_this_table_seq",
-                       sequenceName = "i_dont_care_about_this_table_seq",
-                       allocationSize = 1)
+    @GeneratedValue(
+            strategy = SEQUENCE,
+            generator = "i_dont_care_about_this_table_seq")
+    @SequenceGenerator(
+            name = "i_dont_care_about_this_table_seq",
+            sequenceName = "i_dont_care_about_this_table_seq",
+            allocationSize = 1)
     public Long id;
     public String name;
     public Date when;

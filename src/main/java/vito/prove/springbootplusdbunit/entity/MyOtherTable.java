@@ -1,13 +1,13 @@
 package vito.prove.springbootplusdbunit.entity;
 
-import static javax.persistence.GenerationType.SEQUENCE;
+import static jakarta.persistence.GenerationType.SEQUENCE;
 
 import java.util.Date;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -18,9 +18,10 @@ import lombok.NoArgsConstructor;
 public class MyOtherTable {
     @Id
     @GeneratedValue(strategy = SEQUENCE, generator = "my_other_table_seq")
-    @SequenceGenerator(name = "my_other_table_seq",
-                       sequenceName = "my_other_table_seq",
-                       allocationSize = 1)
+    @SequenceGenerator(
+            name = "my_other_table_seq",
+            sequenceName = "my_other_table_seq",
+            allocationSize = 1)
     public Long id;
     public String name;
     public Date when;
