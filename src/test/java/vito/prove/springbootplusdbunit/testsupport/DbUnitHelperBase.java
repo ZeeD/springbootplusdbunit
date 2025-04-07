@@ -56,8 +56,8 @@ public interface DbUnitHelperBase {
                                        .map(t -> new VerifyTableDefinition(t,
                                                                            null))
                                        .toArray(VerifyTableDefinition[]::new),
-                                new String[] { pTable },
-                                new String[] { eTable },
+                                new String[] {pTable},
+                                new String[] {eTable},
                                 () -> {
                                     try {
                                         return supplier.get();

@@ -18,10 +18,9 @@ import lombok.NoArgsConstructor;
 public class MyOtherTable {
     @Id
     @GeneratedValue(strategy = SEQUENCE, generator = "my_other_table_seq")
-    @SequenceGenerator(
-            name = "my_other_table_seq",
-            sequenceName = "my_other_table_seq",
-            allocationSize = 1)
+    @SequenceGenerator(name = "my_other_table_seq",
+                       sequenceName = "my_other_table_seq",
+                       allocationSize = 1)
     public Long id;
     public String name;
     public Date when;
