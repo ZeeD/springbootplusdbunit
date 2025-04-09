@@ -102,7 +102,7 @@ public interface DbUnitHelperBase {
 
         @Override
         protected void setUpDatabaseConfig(final DatabaseConfig config) {
-            config.setProperty(FEATURE_BATCHED_STATEMENTS, true);
+            config.setProperty(FEATURE_BATCHED_STATEMENTS, Boolean.TRUE);
             config.setProperty(PROPERTY_DATATYPE_FACTORY,
                                new H2DataTypeFactory());
         }

@@ -40,9 +40,8 @@ public class ControllerDbTest extends DbUnitHelper {
     @Test
     @Order(2)
     void updateOrCopyUpdate() throws Throwable {
-        val myTable = new MyTable(123L,
-                                  "newName",
-                                  from(parse("2020-11-05T05:58:13Z")));
+        val myTable = new MyTable(Long.valueOf(123), "newName",
+                from(parse("2020-11-05T05:58:13Z")));
 
         this.runTest(() -> {
             this.controller.updateOrCopy(myTable);
@@ -59,9 +58,8 @@ public class ControllerDbTest extends DbUnitHelper {
     @Test
     @Order(4)
     void updateOrCopyCopy() throws Throwable {
-        val myTable = new MyTable(null,
-                                  "name",
-                                  from(parse("1982-11-05T05:58:13Z")));
+        val myTable = new MyTable(null, "name",
+                from(parse("1982-11-05T05:58:13Z")));
 
         this.runTest(() -> {
             this.controller.updateOrCopy(myTable);
