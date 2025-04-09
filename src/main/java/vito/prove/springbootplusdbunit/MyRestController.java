@@ -35,16 +35,20 @@ class MyRestController {
     }
 
     @PostMapping(value = "update-or-copy")
-    public void
-           updateOrCopy(@RequestBody final MyTable myTable) throws Throwable {
-        if (myTable.getId() != null) // update
-            this.myTableRepository.save(myTable);
+    public void updateOrCopy(@RequestBody final MyTable myTable) {
+        final var id = myTable.getId();
+        if (id != null) { // update
+            final var dbTable = this.myTableRepository.findById(id).get();
+            dbTable.setName(myTable.getName());
+            dbTable.setSomethingDate(myTable.getSomethingDate());
+            this.myTableRepository.save(dbTable);
+        }
         else { // save and copy
-            val myTableId = this.myTableRepository.save(myTable).getId();
+            final var newId = this.myTableRepository.save(myTable).getId();
 
-            val myOtherTable = MyOtherTable.of(myTableId,
+            val myOtherTable = MyOtherTable.of(newId,
                                                myTable.getName(),
-                                               myTable.getWhen());
+                                               myTable.getSomethingDate());
             this.myOtherTableRepository.save(myOtherTable);
         }
     }

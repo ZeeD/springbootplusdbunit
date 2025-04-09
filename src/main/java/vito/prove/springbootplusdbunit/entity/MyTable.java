@@ -1,26 +1,22 @@
 package vito.prove.springbootplusdbunit.entity;
 
-import static jakarta.persistence.GenerationType.SEQUENCE;
-
 import java.util.Date;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
+@NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 public class MyTable {
     @Id
-    @GeneratedValue(strategy = SEQUENCE, generator = "my_table_seq")
-    @SequenceGenerator(name = "my_table_seq",
-                       sequenceName = "my_table_seq",
-                       allocationSize = 1)
-    Long id;
-    String name;
-    Date when;
+    @GeneratedValue
+    private Long id;
+    private String name;
+    private Date somethingDate;
 }
