@@ -8,13 +8,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
-
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.Data;
 
+@Data
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(staticName = "of")
 public class IDontCareAboutThisTable {
     @Id
     @GeneratedValue(strategy = SEQUENCE,
@@ -22,7 +21,7 @@ public class IDontCareAboutThisTable {
     @SequenceGenerator(name = "i_dont_care_about_this_table_seq",
                        sequenceName = "i_dont_care_about_this_table_seq",
                        allocationSize = 1)
-    public Long id;
-    public String name;
-    public Date when;
+    Long id;
+    String name;
+    Date when;
 }

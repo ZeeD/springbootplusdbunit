@@ -23,10 +23,9 @@ class MyRestController {
 
     @GetMapping(value = "init")
     public void init() {
-        val rows = List.of(new MyTable(null, "name1", new Date(0L)),
-                           new MyTable(null, "name2", new Date(1_000L)),
-                           new MyTable(null, "name3", new Date(100_000L)));
-
+        final var rows = List.of(MyTable.of(null, "name1", new Date(0L)),
+                                 MyTable.of(null, "name2", new Date(1_000L)),
+                                 MyTable.of(null, "name3", new Date(100_000L)));
         this.myTableRepository.saveAll(rows);
     }
 
@@ -38,13 +37,14 @@ class MyRestController {
     @PostMapping(value = "update-or-copy")
     public void
            updateOrCopy(@RequestBody final MyTable myTable) throws Throwable {
-        if (myTable.id != null) // update
+        if (myTable.getId() != null) // update
             this.myTableRepository.save(myTable);
         else { // save and copy
-            val myTableId = this.myTableRepository.save(myTable).id;
-            val myOtherTable = new MyOtherTable(myTableId,
-                                                myTable.name,
-                                                myTable.when);
+            val myTableId = this.myTableRepository.save(myTable).getId();
+
+            val myOtherTable = MyOtherTable.of(myTableId,
+                                               myTable.getName(),
+                                               myTable.getWhen());
             this.myOtherTableRepository.save(myOtherTable);
         }
     }
