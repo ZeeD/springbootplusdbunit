@@ -14,5 +14,5 @@ a simple test project with spring boot and dbunit
 
 * write your "normal" sql db + jpa stuff + rest endpoint
 * set your "normal" connecion url in main `application.properties`
-* 
+* set you test connection url in test `application.properties` to point to h2
 

@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import vito.prove.springbootplusdbunit.entity.MyOtherTable;
 import vito.prove.springbootplusdbunit.entity.MyTable;
 import vito.prove.springbootplusdbunit.repository.MyOtherTableRepository;
@@ -46,9 +45,10 @@ class MyRestController {
         else { // save and copy
             final var newId = this.myTableRepository.save(myTable).getId();
 
-            val myOtherTable = MyOtherTable.of(newId,
-                                               myTable.getName(),
-                                               myTable.getSomethingDate());
+            final var myOtherTable =
+                                   MyOtherTable.of(newId,
+                                                   myTable.getName(),
+                                                   myTable.getSomethingDate());
             this.myOtherTableRepository.save(myOtherTable);
         }
     }
