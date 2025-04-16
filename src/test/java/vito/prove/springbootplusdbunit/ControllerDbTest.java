@@ -12,19 +12,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 
 import lombok.RequiredArgsConstructor;
 import vito.prove.springbootplusdbunit.model.MyModel;
 import vito.prove.springbootplusdbunit.repository.MyTableRepository;
 import vito.prove.springbootplusdbunit.testsupport.DbUnitHelper;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
 @TestMethodOrder(OrderAnnotation.class)
 class ControllerDbTest {
     final DbUnitHelper helper;
-    final MyRestController controller;
     final MyTableRepository repository;
+    final TestRestTemplate restTemplate;
 
     @Test
     @Order(1)
@@ -34,12 +36,19 @@ class ControllerDbTest {
 
     @Test
     @Order(2)
-    void updateOrCopyUpdate() throws Throwable {
-        final var request = new MyModel(Long.valueOf(123),
+    void testCreateOrUpdateDoUpdate() throws Throwable {
+        final var request = new MyModel(Long.valueOf(7),
                                         "newName",
                                         from(parse("2020-11-05T05:58:13Z")));
 
-        this.helper.runTest(() -> this.controller.createOrUpdate(request));
+        final var expected = Long.valueOf(7);
+        final var actual = this.helper.runTest(() -> {
+            return this.restTemplate.postForObject("/create-or-update",
+                                                   request,
+                                                   Long.class);
+        });
+
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -50,12 +59,19 @@ class ControllerDbTest {
 
     @Test
     @Order(4)
-    void updateOrCopyCopy() throws Throwable {
+    void testCreateOrUpdateDoCreate() throws Throwable {
         final var request = new MyModel(null,
                                         "name",
                                         from(parse("1982-11-05T05:58:13Z")));
 
-        this.helper.runTest(() -> this.controller.createOrUpdate(request));
+        final var expected = Long.valueOf(1);
+        final var actual = this.helper.runTest(() -> {
+            return this.restTemplate.postForObject("/create-or-update",
+                                                   request,
+                                                   Long.class);
+        });
+
+        assertEquals(expected, actual);
     }
 
     @Test

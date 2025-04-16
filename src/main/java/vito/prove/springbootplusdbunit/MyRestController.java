@@ -3,6 +3,7 @@ package vito.prove.springbootplusdbunit;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +22,7 @@ class MyRestController {
     final MyTableRepository repository;
     final MyOtherTableRepository myOtherTableRepository;
 
-    @GetMapping(value = "init")
+    @GetMapping(value = "init", produces = MediaType.APPLICATION_JSON_VALUE)
     void init() {
         final var tables =
                          List.of(MyTable.of(null, "name1", new Date(0L)),
@@ -30,7 +31,7 @@ class MyRestController {
         this.repository.saveAll(tables);
     }
 
-    @GetMapping(value = "find-all")
+    @GetMapping(value = "find-all", produces = MediaType.APPLICATION_JSON_VALUE)
     List<MyModel> findAll() {
         final var tables = this.repository.findAll();
 
@@ -41,7 +42,9 @@ class MyRestController {
                      .toList();
     }
 
-    @PostMapping(value = "create-or-update")
+    @PostMapping(value = "create-or-update",
+                 produces = MediaType.APPLICATION_JSON_VALUE,
+                 consumes = MediaType.APPLICATION_JSON_VALUE)
     public Long createOrUpdate(@RequestBody final MyModel request) {
         final var id = request.getId();
         if (id == null)

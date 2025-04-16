@@ -22,7 +22,7 @@ public class DbUnitHelper {
     /**
      * run the tests, do the db checks, return the supplier value
      */
-    public void
+    public Object
            runTest(final PrepAndExpectedTestCaseSteps steps) throws Throwable {
         /*
          * really ugly workaround: CsvURLDataSet WANT a single .csv file, but
@@ -43,12 +43,13 @@ public class DbUnitHelper {
                                                .toURI()));
         final var pTable = format("%s/%s.csv", p, pTables.get(0));
 
-        this.dbUnit.runTest(eTables.stream()
-                                   .map(t -> new VerifyTableDefinition(t, null))
-                                   .toArray(VerifyTableDefinition[]::new),
-                            new String[] {pTable},
-                            new String[] {eTable},
-                            steps);
+        return this.dbUnit.runTest(eTables.stream()
+                                          .map(t -> new VerifyTableDefinition(t,
+                                                                              null))
+                                          .toArray(VerifyTableDefinition[]::new),
+                                   new String[] {pTable},
+                                   new String[] {eTable},
+                                   steps);
     }
 
     private static String testName(final String stem) {
