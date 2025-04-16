@@ -11,45 +11,66 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import vito.prove.springbootplusdbunit.entity.MyOtherTable;
 import vito.prove.springbootplusdbunit.entity.MyTable;
+import vito.prove.springbootplusdbunit.model.MyModel;
 import vito.prove.springbootplusdbunit.repository.MyOtherTableRepository;
 import vito.prove.springbootplusdbunit.repository.MyTableRepository;
 
-@RequiredArgsConstructor
 @RestController
+@RequiredArgsConstructor
 class MyRestController {
-    final MyTableRepository myTableRepository;
+    final MyTableRepository repository;
     final MyOtherTableRepository myOtherTableRepository;
 
     @GetMapping(value = "init")
-    public void init() {
-        final var rows = List.of(MyTable.of(null, "name1", new Date(0L)),
+    void init() {
+        final var tables =
+                         List.of(MyTable.of(null, "name1", new Date(0L)),
                                  MyTable.of(null, "name2", new Date(1_000L)),
                                  MyTable.of(null, "name3", new Date(100_000L)));
-        this.myTableRepository.saveAll(rows);
+        this.repository.saveAll(tables);
     }
 
     @GetMapping(value = "find-all")
-    public Iterable<MyTable> findAll() {
-        return this.myTableRepository.findAll();
+    List<MyModel> findAll() {
+        final var tables = this.repository.findAll();
+
+        return tables.stream()
+                     .map(table -> new MyModel(table.getId(),
+                                               table.getName(),
+                                               table.getSomethingDate()))
+                     .toList();
     }
 
-    @PostMapping(value = "update-or-copy")
-    public void updateOrCopy(@RequestBody final MyTable myTable) {
-        final var id = myTable.getId();
-        if (id != null) { // update
-            final var dbTable = this.myTableRepository.findById(id).get();
-            dbTable.setName(myTable.getName());
-            dbTable.setSomethingDate(myTable.getSomethingDate());
-            this.myTableRepository.save(dbTable);
-        }
-        else { // save and copy
-            final var newId = this.myTableRepository.save(myTable).getId();
+    @PostMapping(value = "create-or-update")
+    public Long createOrUpdate(@RequestBody final MyModel request) {
+        final var id = request.getId();
+        if (id == null)
+            return this.createMyTable(request);
 
-            final var myOtherTable =
-                                   MyOtherTable.of(newId,
-                                                   myTable.getName(),
-                                                   myTable.getSomethingDate());
-            this.myOtherTableRepository.save(myOtherTable);
-        }
+        this.updateMyTable(id, request);
+        this.createMyOtherTable(id, request);
+        return id;
+    }
+
+    private Long createMyTable(final MyModel model) {
+        final var table = MyTable.of(model.getId(),
+                                     model.getName(),
+                                     model.getSomethingDate());
+
+        return this.repository.save(table).getId();
+    }
+
+    private void updateMyTable(final Long id, final MyModel model) {
+        final var table = this.repository.findById(id).orElseThrow();
+        table.setName(model.getName());
+        table.setSomethingDate(model.getSomethingDate());
+        this.repository.save(table);
+    }
+
+    private void createMyOtherTable(final Long id, final MyModel model) {
+        final var otherTable = MyOtherTable.of(id,
+                                               model.getName(),
+                                               model.getSomethingDate());
+        this.myOtherTableRepository.save(otherTable);
     }
 }
