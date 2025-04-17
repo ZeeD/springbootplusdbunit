@@ -1,6 +1,7 @@
 package vito.prove.springbootplusdbunit;
 
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import org.springframework.http.MediaType;
@@ -25,9 +26,21 @@ class MyRestController {
     @GetMapping(value = "init", produces = MediaType.APPLICATION_JSON_VALUE)
     void init() {
         final var tables =
-                         List.of(MyTable.of(null, "name1", new Date(0L)),
-                                 MyTable.of(null, "name2", new Date(1_000L)),
-                                 MyTable.of(null, "name3", new Date(100_000L)));
+                         List.of(MyTable.of(null,
+                                            "name1",
+                                            LocalDateTime.ofEpochSecond(0L,
+                                                                        0,
+                                                                        ZoneOffset.UTC)),
+                                 MyTable.of(null,
+                                            "name2",
+                                            LocalDateTime.ofEpochSecond(1_000L,
+                                                                        0,
+                                                                        ZoneOffset.UTC)),
+                                 MyTable.of(null,
+                                            "name3",
+                                            LocalDateTime.ofEpochSecond(100_000L,
+                                                                        0,
+                                                                        ZoneOffset.UTC)));
         this.repository.saveAll(tables);
     }
 

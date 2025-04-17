@@ -1,6 +1,6 @@
 package vito.prove.springbootplusdbunit.entity;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,5 +18,5 @@ public class MyTable {
     @GeneratedValue
     private Long id;
     private String name;
-    private Date somethingDate;
+    private LocalDateTime somethingDate;
 }

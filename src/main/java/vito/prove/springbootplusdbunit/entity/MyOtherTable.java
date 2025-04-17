@@ -1,6 +1,6 @@
 package vito.prove.springbootplusdbunit.entity;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -16,5 +16,5 @@ public class MyOtherTable {
     @Id
     private Long id;
     private String name;
-    private Date somethingDate;
+    private LocalDateTime somethingDate;
 }

@@ -1,9 +1,8 @@
 package vito.prove.springbootplusdbunit;
 
-import static java.time.Instant.parse;
-import static java.util.Date.from;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import static java.time.LocalDateTime.parse;
 import java.util.List;
 
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
@@ -39,7 +38,7 @@ class ControllerDbTest {
     void testCreateOrUpdateDoUpdate() throws Throwable {
         final var request = new MyModel(Long.valueOf(7),
                                         "newName",
-                                        from(parse("2020-11-05T05:58:13Z")));
+                                        parse("2020-11-05T05:58:13"));
 
         final var expected = Long.valueOf(7);
         final var actual = this.helper.runTest(() -> {
@@ -62,7 +61,7 @@ class ControllerDbTest {
     void testCreateOrUpdateDoCreate() throws Throwable {
         final var request = new MyModel(null,
                                         "name",
-                                        from(parse("1982-11-05T05:58:13Z")));
+                                        parse("1982-11-05T05:58:13"));
 
         final var expected = Long.valueOf(1);
         final var actual = this.helper.runTest(() -> {
